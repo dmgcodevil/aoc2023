@@ -47,7 +47,7 @@ pub fn main() !void {
                         if (word[0] == ch and (i + word.len <= line.len) and std.mem.eql(u8, line[i .. i + word.len], word)) {
                             //print("found number {s}\n", .{line[i .. i + word.len]});
                             try numbers.append(@as(i32, @intCast(j)) + 1);
-                            i = i + word.len - 1;
+                            i = i + word.len - 2; // extra -1 to address cases: "eighthree" is 83 and for "sevenine" is 79.
                             //print("pitr\n", .{});
                         }
                     } else {
