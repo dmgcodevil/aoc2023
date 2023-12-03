@@ -49,6 +49,14 @@ pub fn main() !void {
     var attached: bool = false;
     var connected = std.StringHashMap([2]i32).init(allocator);
     defer connected.deinit();
+
+    var keyBuffers = std.ArrayList([]u8).init(allocator);
+    defer {
+        for (keyBuffers.items) |b| {
+            allocator.free(b);
+        }
+        keyBuffers.deinit();
+    }
     for (grid.items, 0..) |row, i| {
         for (row, 0..) |ch, j| {
             if (std.ascii.isDigit(ch)) {
@@ -72,6 +80,7 @@ pub fn main() !void {
                     if (attached) {
                         print("num={}, attached={}\n", .{ num, attached });
                         var keyBuf = try allocator.alloc(u8, 1000);
+                        try keyBuffers.append(keyBuf);
                         const key = try std.fmt.bufPrint(keyBuf[0..], "{d}-{d}", .{ x_attached, y_attached });
                         if (connected.get(key) == null) {
                             try connected.put(key, [2]i32{ 0, 0 });
