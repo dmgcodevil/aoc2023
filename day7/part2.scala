@@ -6,8 +6,6 @@ import scala.collection.mutable
 import scala.io.Source
 import scala.util.Using
 
-
-// this code works for all possible input I could find on internet and still fails on the actual input
 object part2 {
 
   val orderMap = Map(
@@ -28,12 +26,12 @@ object part2 {
 
   def main(args: Array[String]): Unit = {
 
-
     val fileName = "input"
 
     val lines: List[String] = Using.resource(Source.fromFile(fileName)) { source =>
       source.getLines().toList
     }
+
 
     val hands = lines.map { line =>
       val p = line.split(" ")
@@ -44,9 +42,6 @@ object part2 {
     println(sorted)
     val ans = sorted.zipWithIndex.foldLeft(0L)((acc, p) => acc + p._1.bid * (p._2 + 1))
     println(ans)
-
-
-
 
   }
 
@@ -63,54 +58,19 @@ object part2 {
     }
   }
 
-  def replace(input: String): String = {
-    val chars = input.toCharArray
-    val left_count = Array.fill(chars.length)(1)
-    val right_count = Array.fill(chars.length)(1)
-
-    def calcCounts(): Unit = {
-      for i <- 0 until chars.length do
-        left_count(i) = 1
-        right_count(i) = 1
-
-      for i <- 1 until chars.length do
-        if chars(i) == chars(i - 1) then left_count(i) = left_count(i - 1) + 1
-
-      for i <- chars.length - 2 to 0 by -1 do
-        if chars(i + 1) == chars(i) then right_count(i) = right_count(i + 1) + 1
-    }
-
-    //    for i <- 0 until chars.length do
-    //      println(s"i=$i, char '${chars(i)}', left_count=${left_count(i)}, right_count=${right_count(i)}")
-    calcCounts()
-    val jCount = chars.count(_ == 'J')
-    if jCount > 0 && jCount < 5 then
-      for i <- 0 until chars.length do
-        if chars(i) == 'J' then
-          val aIdx = i - 1
-          val bIdx = chars.indexWhere(_ != 'J', i + 1)
-          val aCount = if aIdx != -1 then left_count(aIdx) else 0
-          val bCount = if bIdx != -1 then right_count(bIdx) else 0
-          //          if aCount == bCount then
-          //            if orderMap(chars(aIdx)) > orderMap(chars(bIdx)) then
-          //              chars(i) = chars(aIdx)
-          //            else for j <- i until bIdx do chars(j) = chars(bIdx)
-          //          else if aCount > bCount then chars(i) = chars(aIdx)
-          //          else for j <- i until bIdx do chars(j) = chars(bIdx)
-          if aCount > bCount then chars(i) = chars(aIdx)
-          else for j <- i until bIdx do chars(j) = chars(bIdx)
-        calcCounts()
-
-    new String(chars)
-  }
-
-
   object Hand {
     def apply(str: String, bid: Int = 0): Hand = {
-      val replaced = replace(str)
+      if (str == "JJJJJ") return Hand(str, Five, bid)
 
-      val cardCount = mutable.Map(replaced.toCharArray
+      val cardCount = mutable.Map(str.toCharArray.filter(_ != 'J')
         .foldLeft(Map.empty[Char, Int])((m, c) => m + (c -> (m.getOrElse(c, 0) + 1))).toSeq: _*)
+
+      val jCount = str.count(_ == 'J')
+
+      for _ <- 0 until jCount do
+        val maxKey = cardCount.maxBy(_._2)._1
+        cardCount(maxKey) = cardCount(maxKey) + 1
+
       val count = cardCount.values.foldLeft(Map.empty[Int, Int])((m, c) => m + (c -> (m.getOrElse(c, 0) + 1)))
       val t = if (count.get(5).contains(1)) {
         Five
