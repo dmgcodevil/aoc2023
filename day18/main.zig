@@ -2,7 +2,7 @@ const std = @import("std");
 const allocator = std.heap.page_allocator;
 
 const Direction = enum { Up, Down, Left, Right };
-
+const Part2 = false;
 const Pos = struct {
     x: i32,
     y: i32,
@@ -88,8 +88,23 @@ pub fn main() !void {
             len = try std.fmt.parseInt(i32, len_str, 10);
         }
         if (tokenizer.next()) |color_str| {
-            color = color_str;
+            // part-2
+            color = color_str[2 .. color_str.len - 1];
+            if (Part2) {
+                len = try std.fmt.parseInt(i32, color[0 .. color.len - 1], 16);
+                var d_int: i32 = color[color.len - 1] - '0';
+                if (d_int == 0) {
+                    direction = Direction.Right;
+                } else if (d_int == 1) {
+                    direction = Direction.Down;
+                } else if (d_int == 2) {
+                    direction = Direction.Left;
+                } else {
+                    direction = Direction.Up;
+                }
+            }
         }
+        std.debug.print("len={d}, direction={any}\n", .{ len, direction });
         try commands.append(Cmd{
             .direction = direction,
             .len = len,
@@ -127,6 +142,7 @@ pub fn main() !void {
     var n = @as(usize, @intCast(try std.math.absInt(min_y) + max_y + 1));
     std.debug.print("m={d}, n={d}\n", .{ m, n });
     var grid = std.ArrayList(std.ArrayList(u8)).init(allocator);
+    try grid.resize(m);
     defer {
         for (grid.items) |row| {
             row.deinit();
@@ -134,12 +150,14 @@ pub fn main() !void {
         grid.deinit();
     }
 
-    for (0..m) |_| {
-        var row = std.ArrayList(u8).init(allocator);
-        for (0..n) |_| {
-            try row.append('.');
+    for (grid.items) |*row| {
+        var elements = std.ArrayList(u8).init(allocator);
+        try elements.resize(n);
+        for (elements.items) |*e| {
+            e.* = '.';
         }
-        try grid.append(row);
+        row.* = elements;
+        //try grid.append(row);
     }
 
     x = min_x * -1;
@@ -191,7 +209,7 @@ pub fn main() !void {
         fill(grid, 0, @as(i32, @intCast(j)), visited);
         fill(grid, @as(i32, @intCast(m - 1)), @as(i32, @intCast(j)), visited);
     }
-    var cubics: i32 = 0;
+    var cubics: i64 = 0;
     for (0..m) |i| {
         for (0..n) |j| {
             if (grid.items[i].items[j] != '@') {
@@ -200,13 +218,14 @@ pub fn main() !void {
         }
     }
     std.debug.print("cubics={d}\n", .{cubics});
-    const output = try std.fs.cwd().openFile("output", .{ .mode = std.fs.File.OpenMode.write_only });
-    defer output.close();
 
-    for (grid.items) |innerList| {
-        for (innerList.items) |byte| {
-            try output.writeAll(&[_]u8{byte});
-        }
-        try output.writeAll("\n");
-    }
+    // const output = try std.fs.cwd().openFile("output", .{ .mode = std.fs.File.OpenMode.write_only });
+    // defer output.close();
+
+    // for (grid.items) |innerList| {
+    //     for (innerList.items) |byte| {
+    //         try output.writeAll(&[_]u8{byte});
+    //     }
+    //     try output.writeAll("\n");
+    // }
 }
